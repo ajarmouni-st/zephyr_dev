@@ -14,6 +14,7 @@ rsource "*/Kconfig"
 
 # Workaround for not being able to have commas in macro arguments
 DT_CHOSEN_Z_CCM := zephyr,ccm
+DT_CHOSEN_STDBY_TIMER := st,lptim-stdby-timer
 
 config STM32_CCM
 	def_bool $(dt_chosen_enabled,$(DT_CHOSEN_Z_CCM))
@@ -55,6 +56,17 @@ config STM32_WKUP_PINS
 	depends on DT_HAS_ST_STM32_PWR_ENABLED
 	help
 	  Enable support for STM32 PWR wake-up pins.
+
+config STM32_STOP3_LP_MODE
+	bool "STM32 STOP3 low-power mode"
+	depends on SOC_SERIES_STM32U5X && $(dt_chosen_enabled,$(DT_CHOSEN_STDBY_TIMER))
+	help
+	  Enable support for STM32 STOP3 low-power mode.
+	  Based on the Cortex-M33 Deepsleep mode combined with peripheral clock gating.
+	  All clocks in the core domain are stopped.
+	  The PLL, MSIS, MSIK, HSI16, and HSE oscillators are disabled.
+	  All SRAMs and register contents are preserved.
+	  SRAMs can be totally or partially switched off to further reduce consumption.
 
 choice POWER_SUPPLY_CHOICE
 	prompt "STM32 power supply configuration"

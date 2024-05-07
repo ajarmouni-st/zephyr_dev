@@ -204,7 +204,12 @@ void sys_clock_set_timeout(int32_t ticks, bool idle)
 
 	next = pm_policy_next_state(CURRENT_CPU, ticks);
 
-	if ((next != NULL) && (next->state == PM_STATE_SUSPEND_TO_RAM)) {
+	if ((next != NULL) && ((next->state == PM_STATE_SUSPEND_TO_RAM)
+#ifdef CONFIG_STM32_STOP3_LP_MODE
+		|| ((next->state == PM_STATE_SUSPEND_TO_IDLE)
+			&& (next->substate_id == 4))
+#endif /* CONFIG_STM32_STOP3_LP_MODE */
+		)) {
 		uint64_t timeout_us =
 			((uint64_t)ticks * USEC_PER_SEC) / CONFIG_SYS_CLOCK_TICKS_PER_SEC;
 

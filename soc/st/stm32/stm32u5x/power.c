@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021 Linaro Limited
+ * Copyright (c) 2024 STMicroelectronics
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,6 +13,7 @@
 #include <stm32u5xx_ll_bus.h>
 #include <stm32u5xx_ll_cortex.h>
 #include <stm32u5xx_ll_pwr.h>
+#include <stm32u5xx_ll_icache.h>
 #include <stm32u5xx_ll_rcc.h>
 #include <stm32u5xx_ll_system.h>
 #include <clock_control/clock_stm32_ll_common.h>
@@ -25,6 +27,22 @@ LOG_MODULE_DECLARE(soc, CONFIG_SOC_LOG_LEVEL);
 #else
 #define RCC_STOP_WAKEUPCLOCK_SELECTED LL_RCC_STOP_WAKEUPCLOCK_HSI
 #endif
+
+static void disable_cache(void)
+{
+	/* Disabling ICACHE */
+	LL_ICACHE_Disable();
+	while (LL_ICACHE_IsEnabled() == 1U) {
+	}
+
+	/* Wait until ICACHE_SR.BUSYF is cleared */
+	while (LL_ICACHE_IsActiveFlag_BUSY() == 1U) {
+	}
+
+	/* Wait until ICACHE_SR.BSYENDF is set */
+	while (LL_ICACHE_IsActiveFlag_BSYEND() == 0U) {
+	}
+}
 
 void set_mode_stop(uint8_t substate_id)
 {
@@ -41,13 +59,38 @@ void set_mode_stop(uint8_t substate_id)
 	case 3: /* enter STOP2 mode */
 		LL_PWR_SetPowerMode(LL_PWR_STOP2_MODE);
 		break;
+#ifdef CONFIG_STM32_STOP3_LP_MODE
+	case 4: /* enter STOP3 mode */
+
+		LL_PWR_SetSRAM2SBRetention(LL_PWR_SRAM2_SB_FULL_RETENTION);
+		/* Enable RTC wakeup
+		 * This configures an internal pin that generates an event to wakeup the system
+		 */
+		LL_PWR_EnableWakeUpPin(LL_PWR_WAKEUP_PIN7);
+		LL_PWR_SetWakeUpPinSignal3Selection(LL_PWR_WAKEUP_PIN7);
+
+		/* Clear flags */
+		LL_PWR_ClearFlag_SB();
+		LL_PWR_ClearFlag_WU();
+
+		/* Put debug pins in low-power state */
+		LL_PWR_EnableGPIOPullUp((uint32_t)LL_PWR_GPIO_PORTA, LL_PWR_GPIO_PIN_15 | LL_PWR_GPIO_PIN_13);
+		LL_PWR_EnableGPIOPullDown((uint32_t)LL_PWR_GPIO_PORTA, LL_PWR_GPIO_PIN_14);
+		LL_PWR_EnableGPIOPullUp((uint32_t)LL_PWR_GPIO_PORTB, LL_PWR_GPIO_PIN_4);
+
+		disable_cache();
+
+		LL_PWR_EnablePUPDConfig();
+		LL_PWR_SetPowerMode(LL_PWR_STOP3_MODE);
+		break;
+#endif /* CONFIG_STM32_STOP3_LP_MODE */
 	default:
 		LOG_DBG("Unsupported power state substate-id %u", substate_id);
 		break;
 	}
 }
 
-void set_mode_standby(uint8_t substate_id)
+static void set_mode_standby(uint8_t substate_id)
 {
 	ARG_UNUSED(substate_id);
 	/* Select standby mode */
@@ -85,6 +128,17 @@ void pm_state_exit_post_ops(enum pm_state state, uint8_t substate_id)
 		if (substate_id <= 3) {
 			LL_LPM_DisableSleepOnExit();
 			LL_LPM_EnableSleep();
+#if defined(CONFIG_STM32_USE_STOP3)
+		} else if (substate_id == 4) {
+			LL_ICACHE_SetMode(LL_ICACHE_1WAY);
+			LL_ICACHE_Enable();
+			while (LL_ICACHE_IsEnabled() == 0U) {
+			}
+
+			LL_PWR_DisablePUPDConfig();
+			LL_LPM_DisableSleepOnExit();
+			LL_LPM_EnableSleep();
+#endif
 		} else {
 			LOG_DBG("Unsupported power substate-id %u",
 							substate_id);
