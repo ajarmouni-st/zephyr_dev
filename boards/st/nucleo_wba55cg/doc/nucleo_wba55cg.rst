@@ -241,8 +241,14 @@ It could be used for flash and debug using either OpenOCD or STM32Cube ecosystem
 Flashing
 ========
 
-STM32CubeProgrammer is configured as flashing tool by default.
-If available, OpenOCD could be used. Same process applies with both tools.
+The board is configured to be flashed using west `STM32CubeProgrammer`_ runner,
+so its installation is required to be able to flash the board.
+
+Alternatively, openocd can also be used to flash the board using
+the ``--runner`` (or ``-r``) option:
+
+.. code-block:: console
+   $ west flash --runner openocd
 
 Flashing an application to Nucleo WBA55CG
 -----------------------------------------

@@ -132,8 +132,17 @@ Flashing
 ========
 
 STM32F411E-DISCO Discovery kit includes an ST-LINK/V2 embedded debug tool
-interface. This interface is supported by the openocd version included in
-Zephyr SDK.
+interface.
+
+The board is configured to be flashed using west `STM32CubeProgrammer`_ runner,
+so its installation is required to be able to flash the board.
+
+Alternatively, openocd or JLink can also be used to flash the board using
+the ``--runner`` (or ``-r``) option:
+
+.. code-block:: console
+   $ west flash --runner openocd
+   $ west flash --runner jlink
 
 Flashing an application to STM32F411E-DISCO
 -------------------------------------------

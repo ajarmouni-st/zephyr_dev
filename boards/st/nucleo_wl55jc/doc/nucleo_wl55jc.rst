@@ -265,9 +265,16 @@ Flashing
 ========
 
 Nucleo WL55JC board includes an STLINK-V3 embedded debug tool
-interface.  This interface is supported by the openocd version included in the
-Zephyr SDK since v0.11.0.
-You can also choose the ``stm32cubeprogrammer`` runner.
+interface.
+
+The board is configured to be flashed using west `STM32CubeProgrammer`_ runner,
+so its installation is required to be able to flash the board.
+
+Alternatively, openocd can also be used to flash the board using
+the ``--runner`` (or ``-r``) option:
+
+.. code-block:: console
+   $ west flash --runner openocd
 
 
 Flashing an application to Nucleo WL55JC

@@ -190,6 +190,17 @@ Flashing
 
 Nucleo H745ZI-Q board includes an ST-LINK/V3 embedded debug tool interface.
 
+The board is configured to be flashed using west `STM32CubeProgrammer`_ runner
+for both cores, so its installation is required to be able to flash the board.
+The target core is detected automatically.
+
+Alternatively, openocd or JLink can also be used to flash the board using
+the ``--runner`` (or ``-r``) option:
+
+.. code-block:: console
+   $ west flash --runner openocd
+   $ west flash --runner jlink
+
 Flashing operation will depend on the target to be flashed and the SoC
 option bytes configuration.
 
@@ -290,3 +301,6 @@ In order to debug a Zephyr application on Cortex M4 side, you can use
 
 .. _STM32CubeIDE:
    https://www.st.com/en/development-tools/stm32cubeide.html
+
+.. _STM32CubeProgrammer:
+   https://www.st.com/en/development-tools/stm32cubeprog.html

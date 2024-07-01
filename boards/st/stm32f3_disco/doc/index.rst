@@ -211,6 +211,16 @@ Applications for the ``stm32f3_disco`` board configuration can be built and
 flashed in the usual way (see :ref:`build_an_application` and
 :ref:`application_run` for more details).
 
+The board is configured to be flashed using west `STM32CubeProgrammer`_ runner,
+so its installation is required to be able to flash the board.
+
+Alternatively, openocd or JLink can also be used to flash the board using
+the ``--runner`` (or ``-r``) option:
+
+.. code-block:: console
+   $ west flash --runner openocd
+   $ west flash --runner jlink
+
 Flashing an application to STM32F3DISCOVERY
 -------------------------------------------
 
